@@ -9,7 +9,7 @@ Everything you need today is on the table:
  - two LEDs
  - two 330 ohm resistors
  - three female/female jumper wires
- - two female/male jumper wires
+ - four female/male jumper wires
 
 For those with a Raspberry Pi 3 in front of them, plug in the ac adapter to turn on. For those with the Pi Zero, please take the usb power cord and plug into your laptop.
 
@@ -29,7 +29,7 @@ If you are curious as to how these were setup, they were all set to use the wire
 To turn off the Raspberry Pi, from console: `$ sudo shutdown -h now`
 Your SSH connection will immediately end. On the Pi 3, you will see a blinking green light next to the red power light on the Pi. On the Pi Zero you will see a blinking green light near the power connector. Please wait until the green light stops flashing before you unplug the power cable.
 
-It is very important that you don't just unplug power. Shutdown command must be entered. This is because the Raspberry Pi file system is on an SD card and they are prown to corruption. I've experienced embedded systems similar to the Raspberry Pi lose its file system after 3-4 abrupt power offs.
+**It is very important that you don't just unplug power. Shutdown command must be entered. This is because the Raspberry Pi file system is on an SD card and they are prown to corruption. I've experienced embedded systems similar to the Raspberry Pi lose its file system after 3-4 abrupt power offs.**
 
 If at anytime you wish to reboot, from console: `$ sudo reboot now`. Your SSH session will end. Give it a few seconds before attempting reconnect.
 
@@ -39,7 +39,9 @@ Following is the pinout of the Raspberry Pi 3 that you will need to complete the
 ###Turning on the LED using Python
 We'll first learn how to connect an LED light and how to turn it on.
 
-Go through this guide: [Turning on an LED with your Raspberry Pi's GPIO Pins](https://thepihut.com/blogs/raspberry-pi-tutorials/27968772-turning-on-an-led-with-your-raspberry-pis-gpio-pins). This guide has a lot of good information on giving you the basic knowledge that I didn't feel I need to recreate. The following LED exercises will refer to the setup done in the guide.
+Go through this guide: [Turning on an LED with your Raspberry Pi's GPIO Pins](https://thepihut.com/blogs/raspberry-pi-tutorials/27968772-turning-on-an-led-with-your-raspberry-pis-gpio-pins)
+
+This guide has a lot of good information on giving you the basic knowledge that I didn't feel I need to recreate. The following LED exercises will refer to the setup done in the guide.
 
 ###Turning on the LED using C code
 Now that you are able to turn on an LED using Python. Let's try doing the same thing in C. This will still retain the same LED setup.
@@ -97,50 +99,54 @@ note: If you are using the Pi 3, use the following as is. If you are on the Pi Z
 #include <fcntl.h>
 #include <sys/mman.h>
 
-#define BCM2708_PERI_BASE        0x3F000000  //for Pi 2 and 3
-//#define BCM2708_PERI_BASE        0x20000000  //for Pi 1 and Zero
-#define GPIO_BASE                (BCM2708_PERI_BASE + 0x200000) /* GPIO controller */
+#define BCM2708_PERI_BASE 0x3F000000  //for Pi 2 and 3
+//#define BCM2708_PERI_BASE 0x20000000  //for Pi 1 and Zero
+#define GPIO_BASE         (BCM2708_PERI_BASE + 0x200000) /* GPIO controller */
 
-#define BLOCK_SIZE (4*1024)
+#define BLOCK_SIZE (4 * 1024)
 
-int  mem_fd;
-void *gpio_map;
+// GPIO setup macros
+#define GPFSEL(port) (port / 10) //returns the GPIO Function Select Register that controls the given port
+#define LSD(n) (n % 10) //return least significant digit
+#define GPFSEL_POS(port) (LSD(port) * 3) //returns starting location of GPIO port in the GPIO Function Select Register
+#define INP_GPIO(gpio, port) *(gpio + GPFSEL(port)) &= ~(7 << GPFSEL_POS(port)) //set port to input
+#define OUT_GPIO(gpio, port) *(gpio + GPFSEL(port)) |=  (1 << GPFSEL_POS(port)) //set port to output
 
-volatile unsigned *gpio;
+#define GPSET0 7  //GPIO Pin Output Set 0 is the 7th register
+#define GPCLR0 10 //GPIO Pin output Clear 0 is the 10th register
+#define GPIO_SET(gpio) *(gpio + GPSET0)  // sets   bits which are 1 ignores bits which are 0
+#define GPIO_CLR(gpio) *(gpio + GPCLR0) // clears bits which are 1 ignores bits which are 0
+#define SET_BIT(n) (1 << n);
 
-// GPIO setup macros. Always use INP_GPIO(x) before using OUT_GPIO(x)
-#define INP_GPIO(g) *(gpio+((g)/10)) &= ~(7<<(((g)%10)*3))
-#define OUT_GPIO(g) *(gpio+((g)/10)) |=  (1<<(((g)%10)*3))
-
-#define GPIO_SET *(gpio+7)  // sets   bits which are 1 ignores bits which are 0
-#define GPIO_CLR *(gpio+10) // clears bits which are 1 ignores bits which are 0
-
-void setup_io();
+unsigned int *setup_io();
 
 int main(int argc, char **argv)
 {
   int port = 18;
 
-  setup_io();
+  volatile unsigned *gpio = setup_io();
 
-  INP_GPIO(port); // must use INP_GPIO before we can use OUT_GPIO
-  OUT_GPIO(port);
+  INP_GPIO(gpio, port); //must use INP_GPIO before we can use OUT_GPIO
+  OUT_GPIO(gpio, port);
 
-  GPIO_SET = (1 << port);
+  GPIO_SET(gpio) = SET_BIT(port);
   sleep(1);
-  GPIO_CLR = (1 << port);
+  GPIO_CLR(gpio) = SET_BIT(port);
 
   return 0;
 }
 
-void setup_io()
+unsigned int *setup_io()
 {
-  if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
+  int  mem_fd = open("/dev/mem", O_RDWR|O_SYNC);
+
+  if (mem_fd < 0)
+  {
     printf("can't open /dev/mem \n");
     exit(-1);
   }
 
-  gpio_map = mmap(
+  void *gpio_map = mmap(
                     NULL,                 //Any adddress in our space will do
                     BLOCK_SIZE,           //Map length
                     PROT_READ|PROT_WRITE, // Enable reading & writting to mapped memory
@@ -151,18 +157,22 @@ void setup_io()
 
   close(mem_fd);
 
-  if (gpio_map == MAP_FAILED) {
+  if (gpio_map == MAP_FAILED)
+  {
     printf("mmap error %d\n", (int)gpio_map);
     exit(-1);
   }
 
-  gpio = (volatile unsigned *)gpio_map;
+  return (unsigned *)gpio_map;
 }
+
 ```
 
 To compile this: `$ gcc led.c -o led`
 
 To run the code: `$ sudo ./led`
+
+The GPIO setup macros are hard to understand and I did my best to clean that up as much as possible. Let me know if you want a detailed explanation on what they all do, or interest in another workshop/talk focused on just that.
 
 ###More to Explore with LEDs
 Now that you are able to turn on the LED using Python and C, here are some things to try:
@@ -185,7 +195,10 @@ If you are using the Pi Zero, in console: `$ minicom -b 115200 -o -D /dev/ttyAMA
 
 The program should now be open. You should see at the bottom of the screen 115200 8N1. This goes back to the option we had included when starting Minicom. `115200 8N1` means that we are operating at a baud rate of `115200` bits per second. `8N1` means 8 data bits, no parity, and 1 stop bit. Hardware and software flow control are also off. And finally, `/dev/serial0` is the port we are using. Raspberry Pi 3 uses `serial0` while other Pis (1, 2 and Zero) use `ttyAMA0`.
 
-Now what you can do to test if serial loopack is working is by typing anything on the keyboard. You know if its working if whatever you type is printed on the screen. Any key you press is sent out on transmit and read back in on receive and Minicom prints the received data on screen.
+Try the following:
+- Type on your keyboard. You should see what you typed appear on the screen. This is text that were sent out on the transmit line and read back in on the receive line.
+- Now try disconnecting one end of the loopback (or the whole cable). Try typing something now. You will notice that nothing appears on the screen.
+- Reconnect the loopback cable to connect GPIO 14 and 15 again. Try typing now. Text should now show up again.
 
 To exit Minicom:
 - press `Enter`
@@ -231,6 +244,7 @@ int setup()
   int uart_filestream = FS_ERROR;
 
   uart_filestream = open(DEVICE, O_RDWR | O_NOCTTY | O_NDELAY);
+
   if (uart_filestream == FS_ERROR)
   {
     printf("Error - Unable to open UART.  Ensure it is not in use by another application\n");
@@ -286,7 +300,7 @@ void receive(int uart_filestream)
   }
 }
 ```
-To compile this: `$ gcc serial.c -o led`
+To compile this: `$ gcc serial.c -o serial`
 
 To run the code: `$ ./serial`
 
@@ -338,6 +352,13 @@ http://elinux.org/RPi_GPIO_Code_Samples
 http://wiringpi.com/examples/blink/
 
 http://wiringpi.com/the-gpio-utility/
+
+Direct register access is rather hard to understand so here are a few links on just that:
+https://www.raspberrypi.org/forums/viewtopic.php?f=33&t=16982
+
+https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2835/BCM2835-ARM-Peripherals.pdf
+
+http://elinux.org/BCM2835_datasheet_errata
 
 ####Serial UART
 https://en.wikipedia.org/wiki/8-N-1
