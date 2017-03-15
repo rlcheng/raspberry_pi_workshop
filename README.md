@@ -34,7 +34,7 @@ Your SSH connection will immediately end. On the Pi 3, you will see a blinking g
 If at anytime you wish to reboot, from console: `$ sudo reboot now`. Your SSH session will end. Give it a few seconds before attempting reconnect.
 
 Following is the pinout of the Raspberry Pi 3 that you will need to complete the exercises. For those that are using the Pi Zero the pinout is exactly the same if you position the Pi Zero to have its pins north.
-![alt tag](images/raspberry_pi_circuit_note_fig2.jpg)
+![alt tag](images/physical-pin-numbers.png)
 
 ###Turning on the LED using Python
 We'll first learn how to connect an LED light and how to turn it on.
@@ -203,7 +203,7 @@ Try the following:
 To exit Minicom:
 - press `Enter`
 - control + A
-- press `Z`. It will ask if you want to leave minicom, press enter for yes and Minicom will now close.
+- press `X`. It will ask if you want to leave minicom, press enter for yes and Minicom will now close.
 
 So there you have it, serial loopback test without writing a single line of code!
 
