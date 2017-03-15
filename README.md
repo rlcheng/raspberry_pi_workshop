@@ -1,6 +1,6 @@
-##Raspberry Pi Workshop
+## Raspberry Pi Workshop
 
-###Introduction and Starting Up
+### Introduction and Starting Up
 Welcome to the Raspberry Pi workshop. This workshop uses Raspberry Pi 3 and Zeros. All Pis are preconfigured so that one does not need to plug in a keyboard, mouse, and monitor to use (no BYODKM here). Just have your laptop ready with SSH capabilities.
 
 Everything you need today is on the table:
@@ -34,9 +34,9 @@ Your SSH connection will immediately end. On the Pi 3, you will see a blinking g
 If at anytime you wish to reboot, from console: `$ sudo reboot now`. Your SSH session will end. Give it a few seconds before attempting reconnect.
 
 Following is the pinout of the Raspberry Pi 3 that you will need to complete the exercises. For those that are using the Pi Zero the pinout is exactly the same if you position the Pi Zero to have its pins north.
-![alt tag](images/raspberry_pi_circuit_note_fig2.jpg)
+![alt tag](images/physical-pin-numbers.png)
 
-###Turning on the LED using Python
+### Turning on the LED using Python
 We'll first learn how to connect an LED light and how to turn it on.
 
 Go through this guide: [Turning on an LED with your Raspberry Pi's GPIO Pins](https://thepihut.com/blogs/raspberry-pi-tutorials/27968772-turning-on-an-led-with-your-raspberry-pis-gpio-pins)
@@ -77,7 +77,7 @@ Now we are ready to compile the code: `$ gcc ledwp.c -lwiringPi -o ledwp`
 
 To run the code: `sudo ./ledwp`
 
-###Wiring Pi
+### Wiring Pi
 The C code earlier uses the Wiring Pi library to access the GPIO. The Wiring Pi library actually comes with a GPIO utility that you can call directly in the command line, do the following:
 ```
 $ gpio -g mode 18 out
@@ -88,7 +88,7 @@ First line sets up GPIO 18 to be output. Second line turns on the LED. Last line
 
 The Wiring Pi library uses a different pin out than what we are using in this workshop. Their pin 0 is our pin 18. With the -g flag in the command above, it uses our pin numbers. The last argument is similar to the #define in our C code earlier: 1 means on and 0 means off.
 
-###LED in C Again
+### LED in C Again
 So what if you don't want to be dependent on the Wiring Pi library? Is there a way to write code to turn on and off the LED? Yes you can. You can actually do direct register access. Let's create a `led.c` file and do the following (`$ nano led.c`):
 
 note: If you are using the Pi 3, use the following as is. If you are on the Pi Zero, please comment out the line `#define BCM2708_PERI_BASE        0x3F000000` and uncomment the line below it `#define BCM2708_PERI_BASE        0x20000000`. This is because the register addresses differ between the two.
@@ -174,12 +174,12 @@ To run the code: `$ sudo ./led`
 
 The GPIO setup macros are hard to understand and I did my best to clean that up as much as possible. Let me know if you want a detailed explanation on what they all do, or interest in another workshop/talk focused on just that.
 
-###More to Explore with LEDs
+### More to Explore with LEDs
 Now that you are able to turn on the LED using Python and C, here are some things to try:
 - What would you need to change in your code to make the led flash 5 times?
 - What would you need to change in the code to add more LEDs to turn on/off?
 
-###Serial UART loopback with Minicom
+### Serial UART loopback with Minicom
 There are many ways to communicate on a Raspberry Pi and one of them is serial communication. Within serial there are multiple protocols and the Pi comes with the ability to do serial using [UART](https://en.wikipedia.org/wiki/Universal_asynchronous_receiver/transmitter), [I2C](https://en.wikipedia.org/wiki/I²C), and [SPI](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus). We will focus on just UART today.
 
 So how do you know if UART works on the Raspberry Pi? What I generally do is a simple loopback test where a mesage transmitted is immediately read back. One generally has to write code to write out data and read it back in but with a full Linux OS at our disposal, this is made simple by using the software [Minicom](https://en.wikipedia.org/wiki/Minicom). Minicom is installed on the Pi you are working with.
@@ -203,11 +203,11 @@ Try the following:
 To exit Minicom:
 - press `Enter`
 - control + A
-- press `Z`. It will ask if you want to leave minicom, press enter for yes and Minicom will now close.
+- press `X`. It will ask if you want to leave minicom, press enter for yes and Minicom will now close.
 
 So there you have it, serial loopback test without writing a single line of code!
 
-###Serial UART loopback in C
+### Serial UART loopback in C
 To do the loopback test in C, create a serial.c file('nano serial.c') with the following:
 
 note: If you are using the Pi 3 the following code can be used as is. If you are on the Pi Zero please comment out the line `#define DEVICE "/dev/serial0"` and uncomment the line below it `#define DEVICE "/dev/ttyAMA0"`
@@ -304,7 +304,7 @@ To compile this: `$ gcc serial.c -o serial`
 
 To run the code: `$ ./serial`
 
-###Serial UART Pi to Pi
+### Serial UART Pi to Pi
 Now that you can do a loopback, what if you want to connect to another Pi via UART?
 
 To do this we need to connect two Pis together according to the following:
@@ -316,11 +316,11 @@ Next, the tranmit of one Pi is connected to the receive of the other (depicted a
 
 Work with another group to do this connection and determine if you need to make any changes to your code to make this happen.
 
-###Serial UART Pi to Pi with Minicom
+### Serial UART Pi to Pi with Minicom
 If you find that writing C code is too difficult, you can still use Minicom to test that the UART is transmitting correctly from one Pi to another using Minicom. Just make sure that both Pis are set to the same baud rate. As long as both Pis are using the same command as before to start Minicom everything should work fine: `$ minicom -b 115200 -o -D /dev/serial0`
 
-###References:
-####Recreating the Setup from the Workshop
+### References:
+#### Recreating the Setup from the Workshop
 If you'd like to recreate the setup from this Workshop, here are helpful links to get you setup at home.
 
 [Jumper wires](https://www.amazon.com/gp/product/B01FSGGJLY/ref=oh_aui_detailpage_o03_s00?ie=UTF8&psc=1)
@@ -329,24 +329,24 @@ If you'd like to recreate the setup from this Workshop, here are helpful links t
 
 LED and resistors were from an Arduino kit but can be purchased at places like Fry's.
 
-#####Pi 3
+##### Pi 3
 [LoveRPi Raspberry Pi 3 Complete Starter Kit - Clear Case](https://www.amazon.com/LoveRPi-Raspberry-Complete-Starter-Kit/dp/B01IYC0LT0/ref=sr_1_4?s=electronics&ie=UTF8&qid=1488487254&sr=1-4&keywords=raspberry+pi+3+starter+kit)
 This kit comes with a Pi 3.
 
-#####Pi Zero
+##### Pi Zero
 [Pi Zero v1.3](http://www.microcenter.com/product/463189/Zero_v13_Development_Board_-_Camera_Ready)
 Note: Micro Center only lets you buy 1 a month. You can buy more but have to pay double for each Pi Zero you buy.
 
 [MakerSpot Pi Zero Starer Kit](http://makerspot.com/raspberry-pi-zero-mega-pack/)
 
-####Setup
+#### Setup
 http://www.makeuseof.com/tag/setup-wi-fi-bluetooth-raspberry-pi-3/
 
 https://learn.sparkfun.com/tutorials/raspberry-pi-spi-and-i2c-tutorial#i2c-on-pi
 
 https://www.raspberrypi.org/forums/viewtopic.php?t=128458&p=859002\
 
-####LED
+#### LED
 http://elinux.org/RPi_GPIO_Code_Samples
 
 http://wiringpi.com/examples/blink/
@@ -360,7 +360,7 @@ https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2835/BCM2835-A
 
 http://elinux.org/BCM2835_datasheet_errata
 
-####Serial UART
+#### Serial UART
 https://en.wikipedia.org/wiki/8-N-1
 
 http://www.raspberry-projects.com/pi/programming-in-c/uart-serial-port/using-the-uart
