@@ -312,7 +312,7 @@ To do this we need to connect two Pis together according to the following:
 
 There are 3 wires total. We need to connect the ground together so the black line shown is the ground. This puts the two Pis on the same ground plane and without doing that serial transmission will not work.
 
-Next, the tranmit of one Pi is connected to the receive of the other (depicted as the gray line). The receive of one Pi is connect to the transmit of the other (depicted as the orange line).
+Next, the transmit of one Pi is connected to the receive of the other (depicted as the gray line). The receive of one Pi is connect to the transmit of the other (depicted as the orange line).
 
 Work with another group to do this connection and determine if you need to make any changes to your code to make this happen.
 
